@@ -2,9 +2,9 @@ NAME
     namespace - Perl pragma to use like C++ namespace aliasing
 
 SYNOPSIS
-     use namespace qw/File IO::File SEEK_END SEEK_CUR $VERSION/;
+     use namespace File => IO::File;
 
-     my $fh = new File ">foo";
+     my $fh = new File "foo", O_CREAT|O_WRONLY;
      if( defined $fh )
      {
          print $fh "bar\n";
@@ -12,18 +12,22 @@ SYNOPSIS
      }
 
 DESCRIPTION
-     use namespace 
-        qw/ ALIAS PACKAGE [ IMPORT_LIST [ ::SUBPACKAGE [ IMPORT_LIST ]]] /;
+    Allow aliasing namespace. May be useful for reusability increase.
+
+     use namespace ALIAS => PACKAGE 
+        [, qw/IMPORT_LIST [ ::SUBPACKAGE [ IMPORT_LIST ]] /];
 
      ALIAS and PACKAGE is required parameters;
      IMPORT_LIST is the usual list of import.
 
     NOTE! The the names of variables will be imported to ALIAS or
     ALIAS::SUBPACKAGE namespace. And the names of functions will be imported
-    to caller package.
+    also to caller package.
 
 EXAMPLES
-     use namespace qw/DOM XML::DOM $VERSION ::Document $VERSION/;
+     EXAMPLE 1
+
+     use namespace DOM => XML::DOM, qw/$VERSION ::Document $VERSION/;
 
         # DOM is alias for XML::DOM
         #       $VERSION from XML::DOM will be imported to DOM
@@ -32,8 +36,16 @@ EXAMPLES
         #       $VERSION from XML::DOM::Document will be imported to DOM::Document
 
      my $doc = new DOM::Document;
-
      print "Current used DOM version is $DOM::VERSION \n";
+
+     EXAMPLE 2
+
+     use namespace DOM => XML::DOM, qw/::Document/;
+     # or
+     # use namespace DOM => XML::Sablotron::DOM, qw/:constants ::Document/;
+
+     my $doc = new DOM::Document;
+     print "Constant 'TEXT_NODE' = ", TEXT_NODE;
 
 AUTHOR
     Albert MICHEEV <Albert@f80.n5049.z2.fidonet.org>

@@ -2,3 +2,6 @@ Revision history for Perl extension namespace.
 
 0.01  20 Jun 2001
     - first alfa.
+
+0.02  21 Jun 2001
+    - added :export_tags and @export importing
