@@ -1,0 +1,40 @@
+NAME
+    namespace - Perl pragma to use like C++ namespace aliasing
+
+SYNOPSIS
+     use namespace qw/File IO::File SEEK_END SEEK_CUR $VERSION/;
+
+     my $fh = new File ">foo";
+     if( defined $fh )
+     {
+         print $fh "bar\n";
+         $fh->close;
+     }
+
+DESCRIPTION
+     use namespace 
+        qw/ ALIAS PACKAGE [ IMPORT_LIST [ ::SUBPACKAGE [ IMPORT_LIST ]]] /;
+
+     ALIAS and PACKAGE is required parameters;
+     IMPORT_LIST is the usual list of import.
+
+    NOTE! The the names of variables will be imported to ALIAS or
+    ALIAS::SUBPACKAGE namespace. And the names of functions will be imported
+    to caller package.
+
+EXAMPLES
+     use namespace qw/DOM XML::DOM $VERSION ::Document $VERSION/;
+
+        # DOM is alias for XML::DOM
+        #       $VERSION from XML::DOM will be imported to DOM
+        #
+        # ::Document subpackage of XML::DOM will be aliased to DOM::Document
+        #       $VERSION from XML::DOM::Document will be imported to DOM::Document
+
+     my $doc = new DOM::Document;
+
+     print "Current used DOM version is $DOM::VERSION \n";
+
+AUTHOR
+    Albert MICHEEV <Albert@f80.n5049.z2.fidonet.org>
+
