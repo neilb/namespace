@@ -25,10 +25,18 @@ Allow aliasing namespace. May be useful for reusability increase.
  ALIAS and PACKAGE is required parameters;
  IMPORT_LIST is the usual list of import.
 
+
 Also may be undefined namespace and they subnamespaces:
 
  no namespace ALIAS;
 
+
+If ALIAS begin with '::', then alias will be expandet to 
+caller namespace. If following example of pragma namespace 
+called from main:: module, then alias will be expandet to main::ALIAS::.
+     
+ use namespace ::ALIAS => PACKAGE
+    
 
 =head1 EXAMPLES
 
@@ -60,33 +68,25 @@ Also may be undefined namespace and they subnamespaces:
  my $doc = new DOM::Document;
  print "Constant 'TEXT_NODE' = ", TEXT_NODE;
 
-=head1 CREDITS
-
-Thank you to:
-
-    Vladimir Zhebelev <vlad@vladathome.com>
-
-for their bug reports, suggestions and contributions.
-
 =head1 AUTHOR
 
-Albert MICHEEV <Albert@f80.n5049.z2.fidonet.org>
+Albert MICHEEV <amichauer@cpan.org>
 
 =cut
 
-use strict;
-$namespace::VERSION = '0.04';
+use strict qw/subs vars/;
+$namespace::VERSION = '0.05';
 
 
 sub import{
     my ($slf, $als, $pkg) = (shift, shift, shift);
     my $clr = (caller)[0];
-    no strict qw/refs/;
 
-    $als = $clr.'::'.$als;
+    $als = $clr.$als if substr($als, 0, 2) eq '::';
+
     die "Package '$als' already defined!" if defined %{$als.'::'};
 
-    eval "require $pkg" unless defined %{$pkg.'::'};
+    require join( '/', split '::', $pkg ) . '.pm' unless defined %{$pkg.'::'};
     @{$als.'::ISA'} = $pkg;
 
     if( @_ and $_[0] eq '()' ){ shift }
@@ -125,8 +125,7 @@ sub import{
 }
 
 sub unimport{
-    no strict qw/refs/;
-    undef %{(caller)[0].'::'.$_[1].'::'};
+    undef %{(substr($_[1], 0, 2) eq '::' ? (caller)[0] : '' ).$_[1].'::'};
 }
 
 1;

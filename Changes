@@ -11,4 +11,5 @@ Revision history for Perl extension namespace.
     - bugfixed and optimized
 
 0.04  25 Jun 2001
-    - now alias extended to caller namespace
+
+0.05  04 Oct 2001

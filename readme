@@ -24,6 +24,12 @@ DESCRIPTION
 
      no namespace ALIAS;
 
+    If ALIAS begin with '::', then alias will be expandet to caller
+    namespace. If following example of pragma namespace called from main::
+    module, then alias will be expandet to main::ALIAS::.
+
+     use namespace ::ALIAS => PACKAGE
+    
 EXAMPLES
      EXAMPLE 1
 
@@ -51,13 +57,6 @@ EXAMPLES
      my $doc = new DOM::Document;
      print "Constant 'TEXT_NODE' = ", TEXT_NODE;
 
-CREDITS
-    Thank you to:
-
-        Vladimir Zhebelev <vlad@vladathome.com>
-
-    for their bug reports, suggestions and contributions.
-
 AUTHOR
-    Albert MICHEEV <Albert@f80.n5049.z2.fidonet.org>
+    Albert MICHEEV <amichauer@cpan.org>
 
