@@ -5,3 +5,10 @@ Revision history for Perl extension namespace.
 
 0.02  21 Jun 2001
     - added :export_tags and @export importing
+
+0.03  25 Jun 2001
+    - added "unimport"
+    - bugfixed and optimized
+
+0.04  25 Jun 2001
+    - now alias extended to caller namespace

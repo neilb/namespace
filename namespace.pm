@@ -25,9 +25,10 @@ Allow aliasing namespace. May be useful for reusability increase.
  ALIAS and PACKAGE is required parameters;
  IMPORT_LIST is the usual list of import.
 
-NOTE! The the names of variables will be imported to ALIAS or 
-ALIAS::SUBPACKAGE namespace. And the names of functions will be 
-imported also to caller package.
+Also may be undefined namespace and they subnamespaces:
+
+ no namespace ALIAS;
+
 
 =head1 EXAMPLES
 
@@ -44,6 +45,10 @@ imported also to caller package.
  my $doc = new DOM::Document;
  print "Current used DOM version is $DOM::VERSION \n";
 
+ no namespace DOM;
+
+    # namespace DOM and all subnamespaces will be destroyed
+
 
 
  EXAMPLE 2
@@ -55,6 +60,14 @@ imported also to caller package.
  my $doc = new DOM::Document;
  print "Constant 'TEXT_NODE' = ", TEXT_NODE;
 
+=head1 CREDITS
+
+Thank you to:
+
+    Vladimir Zhebelev <vlad@vladathome.com>
+
+for their bug reports, suggestions and contributions.
+
 =head1 AUTHOR
 
 Albert MICHEEV <Albert@f80.n5049.z2.fidonet.org>
@@ -62,47 +75,58 @@ Albert MICHEEV <Albert@f80.n5049.z2.fidonet.org>
 =cut
 
 use strict;
-$namespace::VERSION = '0.02';
+$namespace::VERSION = '0.04';
 
 
 sub import{
     my ($slf, $als, $pkg) = (shift, shift, shift);
     my $clr = (caller)[0];
-
-    eval sprintf q{package %s; use %s; @%s::ISA = qw/%s/;}, 
-        $als, $pkg, $als, $pkg unless defined @{$als.'::ISA'};
-
-    my $sub = '';
     no strict qw/refs/;
 
-    if( $_[0] and $_[0] eq '()' ){ shift }
-    else{ 
-        unshift @_, @{$pkg.'::EXPORT'} if 
-            defined @{$pkg.'::EXPORT'} 
-    }
+    $als = $clr.'::'.$als;
+    die "Package '$als' already defined!" if defined %{$als.'::'};
+
+    eval "require $pkg" unless defined %{$pkg.'::'};
+    @{$als.'::ISA'} = $pkg;
+
+    if( @_ and $_[0] eq '()' ){ shift }
+    else{ unshift @_, @{$pkg.'::EXPORT'} if defined @{$pkg.'::EXPORT'} }
+
+    my ($Pkg, $Als) = ($pkg, $als);
 
     while( my $imp = shift ){
         if( substr($imp, 0, 2) eq '::' ){
-            $sub = $imp;
-            eval sprintf q{package %s; @%s::ISA = qw/%s/;}, $als.$sub, 
-                $als.$sub,  $pkg.$sub unless defined @{$als.$sub.'::ISA'};
-            if( $_[0] and $_[0] eq '()' ){ shift }
-            else{ unshift @_, @{$pkg.$sub.'::EXPORT'} if 
-                defined @{$pkg.$sub.'::EXPORT'} 
-            }
-        }
-        elsif( $imp =~ /^([\$%@])(.+)$/ ){
-            *{$als.$sub.'::'.$2} = $1 eq '$' ? \${$pkg.$sub.'::'.$2} :
-               $1 eq '@' ? \@{$pkg.$sub.'::'.$2} : \%{$pkg.$sub.'::'.$2};
+            $Pkg = $pkg.$imp;
+            $Als = $als.$imp;
+            @{$Als.'::ISA'} = $Pkg;
+            if( @_ and $_[0] eq '()' ){ shift }
+            else{ unshift @_, @{$Pkg.'::EXPORT'} if defined @{$Pkg.'::EXPORT'} }
         }
         elsif( $imp =~ /^:(.+)$/ ){
-            unshift @_, @{(\%{$pkg.$sub.'::EXPORT_TAGS'})->{$1}};
+            die "Can't find '$imp' export tag in $Pkg!\n" unless
+                defined ${$Pkg.'::'}{EXPORT_TAGS}{$1};
+            unshift @_, @{ ${$Pkg.'::'}{EXPORT_TAGS}{$1} };
         }
-        else{
-            *{$clr.'::'.$imp} = *{$als.$sub.'::'.$imp} = 
-                \&{$pkg.$sub.'::'.$imp};
+        elsif( $imp =~ /^([\$%@])?(.+)$/ ){
+            die "Can't find '$imp' from $Pkg!\n" unless
+                !$1       && defined \&{$Pkg.'::'.$2} or
+                $1 eq '$' && defined \${$Pkg.'::'.$2} or
+                $1 eq '@' && defined \@{$Pkg.'::'.$2} or
+                             defined \%{$Pkg.'::'.$2};
+            *{$clr.'::'.$2} = 
+            *{$Als.'::'.$2} = 
+               !$1        ? \&{$Pkg.'::'.$2} :
+                $1 eq '$' ? \${$Pkg.'::'.$2} :
+                $1 eq '@' ? \@{$Pkg.'::'.$2} : 
+                            \%{$Pkg.'::'.$2};
         }
+        else{ die "Undefined behavior!\n" }
     }
+}
+
+sub unimport{
+    no strict qw/refs/;
+    undef %{(caller)[0].'::'.$_[1].'::'};
 }
 
 1;
