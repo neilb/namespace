@@ -75,6 +75,7 @@ Albert MICHEEV <amichauer@cpan.org>
 =cut
 
 use strict qw/subs vars/;
+use Carp;
 $namespace::VERSION = '0.05';
 
 
@@ -84,13 +85,13 @@ sub import{
 
     $als = $clr.$als if substr($als, 0, 2) eq '::';
 
-    die "Package '$als' already defined!" if defined %{$als.'::'};
+    croak "Package '$als' already defined!" if %{$als.'::'};
 
-    require join( '/', split '::', $pkg ) . '.pm' unless defined %{$pkg.'::'};
+    require join( '/', split '::', $pkg ) . '.pm' unless %{$pkg.'::'};
     @{$als.'::ISA'} = $pkg;
 
     if( @_ and $_[0] eq '()' ){ shift }
-    else{ unshift @_, @{$pkg.'::EXPORT'} if defined @{$pkg.'::EXPORT'} }
+    else{ unshift @_, @{$pkg.'::EXPORT'} if @{$pkg.'::EXPORT'} }
 
     my ($Pkg, $Als) = ($pkg, $als);
 
@@ -100,7 +101,7 @@ sub import{
             $Als = $als.$imp;
             @{$Als.'::ISA'} = $Pkg;
             if( @_ and $_[0] eq '()' ){ shift }
-            else{ unshift @_, @{$Pkg.'::EXPORT'} if defined @{$Pkg.'::EXPORT'} }
+            else{ unshift @_, @{$Pkg.'::EXPORT'} if @{$Pkg.'::EXPORT'} }
         }
         elsif( $imp =~ /^:(.+)$/ ){
             die "Can't find '$imp' export tag in $Pkg!\n" unless
